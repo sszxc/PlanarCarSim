@@ -2,6 +2,16 @@
 
 > Forked from project [MultiCam-Simulation](https://github.com/sszxc/MultiCam-Simulation).
 
+## TODO-List
+- [ ] Add track map
+- [ ] Add car model
+- [ ] Add car kinematics
+- [ ] Add smooth view controller
+- [ ] Add navigation algorithm
+
+---
+> Below is the original README.md.
+
 * simulate the imaging process for multiple cameras in 3D space
 * adjust internal and external coefficients freely
 * simulate lens distortion in real time

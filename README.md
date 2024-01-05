@@ -1,4 +1,6 @@
-# MultiCam-Simulation &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/your/your-project/blob/master/LICENSE)
+# PlanarCarSim &middot; [![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://github.com/your/your-project/blob/master/LICENSE)
+
+> Forked from project [MultiCam-Simulation](https://github.com/sszxc/MultiCam-Simulation).
 
 * simulate the imaging process for multiple cameras in 3D space
 * adjust internal and external coefficients freely

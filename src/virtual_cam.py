@@ -14,7 +14,7 @@ from src.distortion_para_fit import *
 from src.utils import *
 
 class VirtualCamEnv:
-    def __init__(self, config_file_path, background_path, AprilTag_detection=False):
+    def __init__(self, config_file_path, background_path, borderValue=(0, 0, 0), AprilTag_detection=False):
         '''
         多相机虚拟环境
 
@@ -61,7 +61,7 @@ class VirtualCamEnv:
                 border = (int((target_h-source_h)/2), int((target_h-source_h)/2), 0, 0)
             else:
                 border = (0, 0, int((target_w-source_w)/2), int((target_w-source_w)/2))
-            background_img = cv2.copyMakeBorder(background_img, *border, cv2.BORDER_CONSTANT, value=(255, 255, 255))
+            background_img = cv2.copyMakeBorder(background_img, *border, cv2.BORDER_CONSTANT, value=borderValue)
             # cv2.BORDER_REPLICATE  # 复制法填充
         self.background = background_img
 
@@ -357,9 +357,10 @@ class Cam:
         self.distortion_mapx, self.distortion_mapy = cv2.initUndistortRectifyMap(
             k, d, None, k, (int(self.width*scale), int(self.height*scale)), 5)
 
-    def update_img(self, background, DEBUG = 0):
+    def update_img(self, background, borderValue=(0, 0, 0), DEBUG=0):
         '''
         更新图像 同时实现可选的畸变
+        borderValue: 控制边界填充颜色
         '''
         if self.distortion:
             # 扩展画布
@@ -367,7 +368,7 @@ class Cam:
             self.img_expand = cv2.warpPerspective(
                 background, self.M33_global_to_local,
                 (int(self.width*scale), int(self.height*scale)),
-                borderValue=(255, 255, 255))
+                borderValue=borderValue)
             # 正向模拟畸变
             self.img_expand = cv2.remap(self.img_expand, 
                 self.distortion_mapx, self.distortion_mapy, 
@@ -386,7 +387,7 @@ class Cam:
             self.img = cv2.warpPerspective(
                 background, self.M33_global_to_local, 
                 (self.width, self.height), 
-                borderValue=(255, 255, 255))
+                borderValue=borderValue)
         
         # 进行 AprilTag 检测
         if self.AprilTag_detection:

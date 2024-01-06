@@ -6,7 +6,7 @@
 #   extrinsic parameters: [[euler], dx, dy, dz]
 
 # 场景的真实尺寸会限制在 2160*3840mm（由 topview 相机的内外参设置）
-# 提供的背景图会被缩放到对应的 1080*1920（不匹配的比例会用白色填充）
+# 提供的背景图会被缩放到对应的 1080*1920（不匹配的比例会用纯色填充）
 topview:
   resolution: [1080, 1920]
   intrinsic parameters: [1250, 1250, 960, 540]
@@ -18,8 +18,8 @@ cam_1:
   resolution: [800, 1280]
   intrinsic parameters: [1227.678512401081, 1227.856142111345, 640, 400]
   distortion: [-0.335814019871572, 0.101431758719313, 0.0]
-  initial pose: [[0, 0, 0], -800, 400, 0]
-  extrinsic parameters: [[-60, 0, 0], 0, 0, 160]
+  initial pose: [[0, 0, -90], 250, 600, 0]
+  extrinsic parameters: [[-60, 0, 0], 0, 80, 160]
 
 cam_2:
   resolution: [800, 1280]

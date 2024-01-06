@@ -83,29 +83,29 @@ def read_controller(CONTROLLER_TYPE=1):
         if k == ord('q') or k == ord('Q'):
             command = -1
         elif k == ord('A') or k == ord('a'):
-            T_para[1] += 250
+            T_para[1] += 50
         elif k == ord('D') or k == ord('d'):
-            T_para[1] -= 250
+            T_para[1] -= 50
         elif k == ord('W') or k == ord('w'):
-            T_para[2] += 250
+            T_para[2] += 50
         elif k == ord('S') or k == ord('s'):
-            T_para[2] -= 250
+            T_para[2] -= 50
         elif k == ord('Z') or k == ord('z'):
-            T_para[3] += 250
+            T_para[3] += 50
         elif k == ord('X') or k == ord('x'):
-            T_para[3] -= 250
+            T_para[3] -= 50
         elif k == ord('U') or k == ord('u'):
-            T_para[0][0] += 10
+            T_para[0][0] += 4
         elif k == ord('J') or k == ord('j'):
-            T_para[0][0] -= 10
+            T_para[0][0] -= 4
         elif k == ord('I') or k == ord('i'):
-            T_para[0][1] += 10
+            T_para[0][1] += 4
         elif k == ord('K') or k == ord('k'):
-            T_para[0][1] -= 10
+            T_para[0][1] -= 4
         elif k == ord('O') or k == ord('o'):
-            T_para[0][2] += 10
+            T_para[0][2] += 4
         elif k == ord('L') or k == ord('l'):
-            T_para[0][2] -= 10
+            T_para[0][2] -= 4
         elif k == ord('1'):
             command = 1
         elif k == ord('2'):

@@ -1,26 +1,30 @@
 # camera_name:
 #   resolution: [height, weight]
 #   intrinsic parameters: [fx, fy, cx, cy]
-#   extrinsic parameters: [[euler], dx, dy, dz]
 #   distortion: [k1, k2, k3]  # dont care about [p1, p2]
+#   initial pose: [[euler], dx, dy, dz]
+#   extrinsic parameters: [[euler], dx, dy, dz]
 
 # 场景的真实尺寸会限制在 2160*3840mm（由 topview 相机的内外参设置）
 # 提供的背景图会被缩放到对应的 1080*1920（不匹配的比例会用白色填充）
 topview:
   resolution: [1080, 1920]
   intrinsic parameters: [1250, 1250, 960, 540]
-  extrinsic parameters: [[0, 0, 0], 0, 0, 2500]
   distortion: 0
+  initial pose: [[0, 0, 0], 0, 0, 0]
+  extrinsic parameters: [[0, 0, 0], 0, 0, 2500]
 
 cam_1:
   resolution: [800, 1280]
   intrinsic parameters: [1227.678512401081, 1227.856142111345, 640, 400]
-  extrinsic parameters: [[0, 0, 0], -800, 400, 1600]
   distortion: [-0.335814019871572, 0.101431758719313, 0.0]
+  initial pose: [[0, 0, 0], -800, 400, 0]
+  extrinsic parameters: [[-60, 0, 0], 0, 0, 160]
 
 cam_2:
   resolution: [800, 1280]
   intrinsic parameters: [1227.678512401081, 1227.856142111345, 640, 400]
-  extrinsic parameters: [[0, 0, 0], 900, -200, 2050]
   distortion: 0
+  initial pose: [[0, 0, 0], 900, -200, 0]
+  extrinsic parameters: [[-45, 0, 0], 0, 0, 205]
   # [-1.199, 0.7534, -0.003025, -1.534, 1.142, -0.177, 0, 0]

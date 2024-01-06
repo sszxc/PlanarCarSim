@@ -22,4 +22,4 @@ if __name__ == "__main__":
         # for (img, name) in imgs:
             # cv2.imshow(name, cv2.resize(img, (int(0.5*img.shape[1]), int(0.5*img.shape[0]))))
 
-        env.control(*read_controller(CONTROLLER_TYPE=0)) # 读取控制器
+        print(env.control(*read_controller(CONTROLLER_TYPE=0))) # 读取控制器

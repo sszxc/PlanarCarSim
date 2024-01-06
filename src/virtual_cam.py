@@ -87,19 +87,19 @@ class VirtualCamEnv:
         return [(cam.img, cam.name) for cam in self.cameras] + [(self.topview.img, 'topview')]
 
     def control(self, T_para, command):
-        '''更新相机位姿'''
-        self.cameras[self.index].update_T(*list_add(T_para, self.cameras[self.index].T_para))  # 更新外参
+        '''更新小车位姿'''
+        self.cameras[self.index].update_car_pose(*list_add(T_para, self.cameras[self.index].car_para))  # 更新外参
         
         if command == -1:  # 解析其他命令
             sys.exit()
         elif command == 1:
-            self.cameras[self.index].reset_T()
+            self.cameras[self.index].reset_car_pose()
         elif command == 2:
             self.index = (self.index + 1) % len(self.cameras)
         elif command == 3:
             self.index = (self.index - 1) % len(self.cameras)
         
-        return self.cameras[self.index].T_para, self.index
+        return self.cameras[self.index].car_para, self.cameras[self.index].cam_para, "cam" + str(self.index)
 
     def __del__(self):
         '''析构函数'''
@@ -108,12 +108,18 @@ class VirtualCamEnv:
 
 class Cam:
     def __init__(self, camera_name, parameters, AprilTag_detection):
-        '''初始化内外参'''
+        '''
+        由相机代表的小车对象
+        相机实际外参 = self.car_pose * self.EM
+        '''
+        # 初始化内外参
         self.name = camera_name
         self.expand_for_distortion = 0.15  # 每侧扩张比例
         self.update_IM(*parameters["intrinsic parameters"])
-        self.update_T(*parameters["extrinsic parameters"])
-        self.T_default = copy.deepcopy(parameters["extrinsic parameters"])  # 存储初始值
+        self.update_EM(*parameters["extrinsic parameters"])
+        self.update_car_pose(*parameters["initial pose"])
+        self.car_pose_default = copy.deepcopy(parameters["initial pose"])  # 存储初始值
+
         self.height, self.width = parameters["resolution"]
         self.init_view(*parameters["resolution"])
         self.distortion = parameters["distortion"]
@@ -137,7 +143,7 @@ class Cam:
             dtype=float
         )
 
-    def EulerToRM(self, theta):
+    def Euler_to_RM(self, theta):
         '''从欧拉角到旋转矩阵'''
         theta = [x / 180.0 * 3.14159265 for x in theta]  # 角度转弧度
         R_x = np.array([[1,                  0,                   0],
@@ -149,17 +155,12 @@ class Cam:
         R_z = np.array([[math.cos(theta[2]), -math.sin(theta[2]), 0],
                         [math.sin(theta[2]), math.cos(theta[2]),  0],
                         [0,                  0,                   1]])
-        R = np.dot(R_y, np.dot(R_x, R_z))
+        # R = np.dot(R_y, np.dot(R_x, R_z))
+        R = np.dot(R_z, np.dot(R_y, R_x))
         return R
 
-    def update_T(self, euler, dx, dy, dz):
-        '''
-        更新外参 即相机与世界之间的转换矩阵
-        更新相机中轴线与地面交点
-        '''
-        self.T_para = [euler, dx, dy, dz]
-        self.dz = dz
-        RM = self.EulerToRM(euler)
+    def EulerXYZ_to_RM(self, euler, dx, dy, dz):
+        RM = self.Euler_to_RM(euler)
         T_43 = np.r_[RM, [[0, 0, 0]]]
         T_rotate = np.c_[T_43, [0, 0, 0, 1]]
         T_trans = np.array([
@@ -169,23 +170,58 @@ class Cam:
             [0, 0, 0, 1]],
             dtype=float
         )
-        self.T44_cam_to_world = np.dot(T_rotate, T_trans)
+        return np.dot(T_rotate, T_trans)
+
+    def RM_to_EulerXYZ(self, RM):
+        '''从旋转矩阵到欧拉角'''
+        sy = math.sqrt(RM[0, 0] * RM[0, 0] + RM[1, 0] * RM[1, 0])
+        singular = sy < 1e-6
+        if not singular:
+            x = math.atan2(RM[2, 1], RM[2, 2])
+            y = math.atan2(-RM[2, 0], sy)
+            z = math.atan2(RM[1, 0], RM[0, 0])
+        else:
+            x = math.atan2(-RM[1, 2], RM[1, 1])
+            y = math.atan2(-RM[2, 0], sy)
+            z = 0
+        Euler = np.array([x, y, z]) * 180.0 / np.pi  # 转换为角度
+        # return Euler, RM[0, 3], RM[1, 3], RM[2, 3]
+        X, Y, Z = -np.linalg.inv(RM)[0:3, 3]
+        return Euler, X, Y, Z
+
+    def update_EM(self, euler, dx, dy, dz):
+        self.EM = self.EulerXYZ_to_RM(euler, dx, dy, dz)
+
+    def update_car_pose(self, euler, dx, dy, dz):
+        '''
+        更新外参 即相机与世界之间的转换矩阵
+        更新相机中轴线与地面交点
+        '''
+        self.car_para = [euler, dx, dy, dz]
+        T44_car_to_world = self.EulerXYZ_to_RM(euler, dx, dy, dz)
+        T44_cam_to_car = self.EM
+        self.T44_cam_to_world = np.dot(T44_cam_to_car, T44_car_to_world)
         self.T44_world_to_cam = np.linalg.inv(self.T44_cam_to_world)
+
+        self.cam_para = self.RM_to_EulerXYZ(self.T44_cam_to_world)
+        self.dz = self.cam_para[-1]
+
         self.update_central_axis_cross_ground()  # 更新光轴交点
 
     def update_central_axis_cross_ground(self):
         '''计算光轴与地面交点'''
-        euler, dx, dy, dz = self.T_para
+        euler, dx, dy, dz = self.cam_para
         # 竖直向下的向量经过RM矩阵旋转得到法向
         direction = np.dot(
-            np.array([0, 0, 1], dtype=np.float), self.EulerToRM(euler))  # 方向向量
+            np.array([0, 0, 1], dtype=np.float), self.Euler_to_RM(euler))  # 方向向量
         focus_x = dx - dz/direction[2]*direction[0]
         focus_y = dy - dz/direction[2]*direction[1]
         self.central_axis_cross_ground = np.array([[-focus_x], [-focus_y], [0]], dtype=float)
+        # self.central_axis_cross_ground = np.array([[-dx], [-dy], [0]], dtype=float)
 
-    def reset_T(self):
-        '''外参归位'''
-        self.update_T(*self.T_default)
+    def reset_car_pose(self):
+        '''小车外参归位'''
+        self.update_car_pose(*self.car_pose_default)
 
     def update_M(self, points_3D, points_topview):
         '''
@@ -238,6 +274,25 @@ class Cam:
         '''
         根据俯视相机参数 把相机视野轮廓投影到俯视图
         '''
+        # 标记小车位置 (背景图上 car_para 位置叠加一张 png 图片)
+        car_center = self.car_para[1:3]
+        car_direction = self.car_para[0][2]
+        car_img = cv2.imread("img/car.png", cv2.IMREAD_UNCHANGED)
+        target_size = min(topview.img.shape[0], topview.img.shape[1])//10
+        car_img = cv2.resize(car_img, (target_size, target_size))
+        # 旋转指定角度
+        M = cv2.getRotationMatrix2D((target_size//2, target_size//2), car_direction, 1)
+        car_img = cv2.warpAffine(car_img, M, (target_size, target_size))
+        # 贴到背景图上
+        car_center_projected = topview.world_point_to_cam_pixel(np.array([[-car_center[0]], [-car_center[1]], [0]]))
+        car_center_projected = (car_center_projected[0]-target_size//2, car_center_projected[1]-target_size//2)
+        topview.img[car_center_projected[1]:car_center_projected[1]+target_size,
+                    car_center_projected[0]:car_center_projected[0]+target_size] = \
+            car_img[:, :, 0:3] * (car_img[:, :, [-1]]/255) + \
+            topview.img[car_center_projected[1]:car_center_projected[1]+target_size,
+                        car_center_projected[0]:car_center_projected[0]+target_size] * \
+            (1 - car_img[:, :, [-1]]/255)
+
         # 节点相机的角点
         corners = []
         if self.distortion:  # 畸变情况下 由于画面变化 轮廓角点也要调整
@@ -272,7 +327,7 @@ class Cam:
         cv2.circle(topview.img, focus_center, 10, color_for_grid, -1)
         
         # 标记相机固定中心的投影
-        camera_center_projected = topview.world_point_to_cam_pixel(np.array([[-self.T_para[1]], [-self.T_para[2]], [0]]))
+        camera_center_projected = topview.world_point_to_cam_pixel(np.array([[-self.cam_para[1]], [-self.cam_para[2]], [0]]))
         cv2.line(topview.img, projected_corners[0], camera_center_projected, color,2)
         cv2.line(topview.img, projected_corners[1], camera_center_projected, color,2)
         cv2.line(topview.img, projected_corners[2], camera_center_projected, color,2)

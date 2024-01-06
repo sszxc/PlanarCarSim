@@ -5,8 +5,8 @@
 ## TODO-List
 - [x] Add track map
 - [x] Use one imshow window
-- [ ] Add car model
-- [ ] Add car kinematics
+- [x] Add car model
+- [ ] Add real car kinematics
 - [ ] Add smooth view controller
 - [ ] Add navigation algorithm
 

@@ -1,3 +1,5 @@
+# 用于正向模拟畸变
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.optimize import curve_fit
@@ -42,7 +44,6 @@ if __name__ == "__main__":
     print(popt)
     plt.plot(x_real_extanded, distortion_func_6para(x_real_extanded, *popt), 'r*',
             label='fit: k1=%5.3f, k2=%5.3f, k3=%5.3f, k4=%5.3f, k5=%5.3f, k6=%5.3f' % tuple(popt))
-    
 
     # plt.xlim(0, 1)
     plt.xlabel('x')

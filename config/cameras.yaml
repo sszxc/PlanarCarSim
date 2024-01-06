@@ -4,7 +4,8 @@
 #   extrinsic parameters: [[euler], dx, dy, dz]
 #   distortion: [k1, k2, k3]  # dont care about [p1, p2]
 
-# 1080*1920 pixels stand for 2160*3840mm ground
+# 场景的真实尺寸会限制在 2160*3840mm（由 topview 相机的内外参设置）
+# 提供的背景图会被缩放到对应的 1080*1920（不匹配的比例会用白色填充）
 topview:
   resolution: [1080, 1920]
   intrinsic parameters: [1250, 1250, 960, 540]

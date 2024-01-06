@@ -11,6 +11,7 @@ import time
 import yaml
 import sys
 from src.distortion_para_fit import *
+from src.utils import *
 
 class VirtualCamEnv:
     def __init__(self, config_file_path, background_path, AprilTag_detection=False):
@@ -45,12 +46,25 @@ class VirtualCamEnv:
         self.reference_points = set_reference_points()
         self.points_topview = [self.topview.world_point_to_cam_pixel(point) for point in self.reference_points[0:4]]
 
-        # 导入背景图
+        # 导入背景图 调整比例
         background_img = cv2.imread(background_path)
-        assert background_img.shape[1]/background_img.shape[0] == self.topview.img.shape[1]/self.topview.img.shape[0], \
-            "The background image should have the same aspect ratio as the topview image."
-        self.background = cv2.resize(background_img, (self.topview.width, self.topview.height))
-        # assert 
+        source_h, source_w, _ = background_img.shape
+        target_h, target_w, _ = self.topview.img.shape
+        ratio = min(target_h/source_h, target_w/source_w)
+        background_img = cv2.resize(background_img, None, fx=ratio, fy=ratio)
+        # 不匹配的比例用白色填充
+        source_h, source_w, _ = background_img.shape
+        if source_h != target_h or source_w != target_w:
+            cprint("The background image should have the same aspect ratio as the topview camera resolution. We will fill the unmatched area with white color.",
+                   "yellow")
+            if source_h < target_h:
+                border = (int((target_h-source_h)/2), int((target_h-source_h)/2), 0, 0)
+            else:
+                border = (0, 0, int((target_w-source_w)/2), int((target_w-source_w)/2))
+            background_img = cv2.copyMakeBorder(background_img, *border, cv2.BORDER_CONSTANT, value=(255, 255, 255))
+            # cv2.BORDER_REPLICATE  # 复制法填充
+        self.background = background_img
+
         # assert len(self.cameras) > 0, "We need at least one camera. Please check the config file."
 
         print("Environment set!")
@@ -112,7 +126,7 @@ class Cam:
             from src.apriltag_utils import ApriltagDetector
             self.AprilTag = ApriltagDetector(parameters["intrinsic parameters"])
         
-        print("Camera set!")
+        print(f"Camera {self.name} set!")
 
     def update_IM(self, fx, fy, cx, cy):
         '''初始化相机内参'''

@@ -5,6 +5,8 @@
 from src.virtual_cam import *
 from src.xbox_controller import *
 from src.monitor import Monitor
+from multiprocessing import Pool
+
 
 if __name__ == "__main__":
     env = VirtualCamEnv("config/cameras.yaml", 
@@ -15,6 +17,9 @@ if __name__ == "__main__":
                        'cam_2': [800, 200, 200, 200],
                        })
 
+    # car_controller = CarController()
+    # car_controller.read_command(T_para)
+
     while True:
         # 缩放显示
         imgs = env.render() # 渲染图像
@@ -22,4 +27,4 @@ if __name__ == "__main__":
         # for (img, name) in imgs:
             # cv2.imshow(name, cv2.resize(img, (int(0.5*img.shape[1]), int(0.5*img.shape[0]))))
 
-        print(env.control(*read_controller(CONTROLLER_TYPE=0))) # 读取控制器
+        env.control(*read_controller(CONTROLLER_TYPE=0)) # 读取控制器

@@ -6,7 +6,8 @@
 - [x] Add track map
 - [x] Use one imshow window
 - [x] Add car model
-- [ ] Add real car kinematics
+- [x] Add real car kinematics
+- [ ] multi-threading for car kinematics
 - [ ] Add smooth view controller
 - [ ] Add navigation algorithm
 

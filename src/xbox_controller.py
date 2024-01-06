@@ -79,7 +79,7 @@ def read_controller(CONTROLLER_TYPE=1):
                 command = 1
 
     else:
-        k = cv2.waitKey(0) & 0xFF
+        k = cv2.waitKey(10)
         if k == ord('q') or k == ord('Q'):
             command = -1
         elif k == ord('A') or k == ord('a'):

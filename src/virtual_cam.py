@@ -12,6 +12,7 @@ import yaml
 import sys
 from src.distortion_para_fit import *
 from src.utils import *
+from src.car_controller import CarController
 
 class VirtualCamEnv:
     def __init__(self, config_file_path, background_path, borderValue=(0, 0, 0), AprilTag_detection=False):
@@ -86,9 +87,18 @@ class VirtualCamEnv:
 
         return [(cam.img, cam.name) for cam in self.cameras] + [(self.topview.img, 'topview')]
 
-    def control(self, T_para, command):
+    def control(self, T_para, command, real_kinematics=True):
         '''更新小车位姿'''
-        self.cameras[self.index].update_car_pose(*list_add(T_para, self.cameras[self.index].car_para))  # 更新外参
+        if real_kinematics:
+            if 'car_controller' not in globals():
+                global car_controller
+                car_controller = CarController()
+            car_controller.read_command(T_para)
+            self.cameras[self.index].update_car_pose(
+                *list_add(car_controller.get_dT(), self.cameras[self.index].car_para))
+        else:
+            self.cameras[self.index].update_car_pose(
+                *list_add(T_para, self.cameras[self.index].car_para))  # 更新外参
         
         if command == -1:  # 解析其他命令
             sys.exit()

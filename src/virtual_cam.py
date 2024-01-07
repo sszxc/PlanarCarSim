@@ -95,7 +95,7 @@ class VirtualCamEnv:
             if 'car_controller' not in globals():
                 global car_controller
                 car_controller = CarController()
-            car_controller.read_command(T_para)
+            car_controller.read_command(T_para, command)
             self.cameras[self.index].update_car_pose(
                 *list_add(car_controller.get_dT(), self.cameras[self.index].car_para))
         else:

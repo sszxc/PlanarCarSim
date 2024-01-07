@@ -1,5 +1,8 @@
 import cv2
 import numpy as np
+from src.utils import timer
+import time
+
 
 # 一个基类，输入图像，输出转向角
 class LineTracker:
@@ -24,14 +27,13 @@ class LineTrackerCV(LineTracker):
                     'mask': mask}
         if area > 0:
             annotated, a, b, residuals = self._fit_line(frame.copy(), binary)
-            print(a, b, residuals)
             log_imgs['annotated'] = annotated
-            steer = 0.5 * a + 0.5 * b
+            steer = -0.8 * a -5 * b
+            print(f' steer: {steer:6.2f}')
             return steer, log_imgs
         else:
             print("Found no white lane!")
             return 0, log_imgs
-
     def _get_binary_img(self, origin, threshold=130):
         # 灰度
         # gray_ave = cv2.cvtColor(origin, cv2.COLOR_BGR2GRAY)
@@ -84,29 +86,13 @@ class LineTrackerCV(LineTracker):
 
         # 遍历每一行像素的第一个白点和最后一个白点
         for row in range(binary.shape[0]):
-            left = -1
-            right = -1
-            for col in range(binary.shape[1]):
-                if binary[row, col] == 255:
-                    left = col
-                    break
-            for col in range(binary.shape[1] - 1, 0, -1):
-                if binary[row, col] == 255:
-                    right = col
-                    break
-            # 在原图上绘制出这两个点
-            # origin[row, left] = (0, 0, 255)
-            cv2.circle(origin, tuple((left, row)), circle_size, (0, 0, 255), 2)
-            # origin[row, right] = (255, 0, 0)
-            cv2.circle(origin, tuple((right, row)), circle_size, (255, 0, 0), 2)
-
-            if left != -1 and right != -1:
-                # 计算出中心点
-                center = (left + right) // 2
-                mid_points.append((row, center))
-                # 在原图上绘制出这个中心点
-                # origin[row, center] = (0, 255, 0)
-                cv2.circle(origin, tuple((center, row)), circle_size, (0, 255, 0), 2)
+            white_pixel_indices = np.where(binary[row] == 255)[0]
+            if len(white_pixel_indices) > 0:
+                cv2.circle(origin, tuple((white_pixel_indices[0], row)), circle_size, (0, 0, 255), 2)
+                cv2.circle(origin, tuple((white_pixel_indices[-1], row)), circle_size, (255, 0, 0), 2)
+                average_position = int(np.mean(white_pixel_indices))
+                cv2.circle(origin, tuple((average_position, row)), circle_size, (0, 255, 0), 2)
+                mid_points.append((row, average_position))
 
         # 最小二乘拟合中点
         x = np.array([point[0] for point in mid_points])  # 生成 x 和 y 的数组
@@ -115,7 +101,7 @@ class LineTrackerCV(LineTracker):
         p1 = np.poly1d(z1)  # 生成拟合函数 (分别是斜率和截距)
 
         # 计算误差
-        residuals = y - p1(x)
+        residuals = np.mean(abs(y - p1(x)))
 
         x_new = np.linspace(x.min(), x.max(), 100)  # 生成拟合后的 x 和 y 的数组
         y_new = p1(x_new)
@@ -130,7 +116,12 @@ class LineTrackerCV(LineTracker):
         horizontal_offset = (y_new[-1]/binary.shape[1] - 0.5) * 20
         # 计算角度
         # steering = angle / 90
+
         # 标注角度
         # cv2.putText(origin, "angle: {:.2f}".format(angle), (10, 10),
                     # cv2.FONT_HERSHEY_SIMPLEX, 0.3, (200, 100, 255), 1)
-        return origin, lane_angle, horizontal_offset, np.mean(abs(residuals))
+        # print(a, b, residuals)
+        print(f'lane_angle: {lane_angle:6.2f}, horizontal_offset: {horizontal_offset:6.2f}, residuals: {residuals:6.2f}',
+              end='')
+        
+        return origin, lane_angle, horizontal_offset, residuals

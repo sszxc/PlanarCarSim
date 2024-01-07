@@ -32,7 +32,7 @@ if __name__ == "__main__":
         steer, log_imgs = linetracker.process(imgs['cam_1'])
         imgs.update(log_imgs)
         monitor.show(imgs)
-        # for (img, name) in imgs:
-            # cv2.imshow(name, cv2.resize(img, (int(0.5*img.shape[1]), int(0.5*img.shape[0]))))
 
-        env.control(*read_controller(CONTROLLER_TYPE=0)) # 读取控制器
+        T_para, command = read_controller(CONTROLLER_TYPE=0)
+        T_para[1] = steer
+        env.control(T_para, command) # 读取控制器

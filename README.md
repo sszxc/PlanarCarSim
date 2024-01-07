@@ -9,7 +9,9 @@
 - [x] Add real car kinematics
 - [ ] multi-threading for car kinematics
 - [ ] Add smooth view controller
-- [ ] Add navigation algorithm
+- [x] Add navigation algorithm
+
+![demo_tracker](img/demo_tracker.gif)
 
 ---
 > Below is the original README.md.

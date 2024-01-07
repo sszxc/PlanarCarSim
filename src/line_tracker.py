@@ -16,8 +16,14 @@ class LineTracker:
 
 # 基于传统 CV 的方法
 class LineTrackerCV(LineTracker):
-    def __init__(self):
+    def __init__(self, delay=False):
         super().__init__()
+        self.delay = delay
+        if delay:
+            from queue import Queue
+            self.q = Queue()
+            for _ in range(3):
+                self.q.put(0)
     
     def process(self, frame):
         binary, gray = self._get_binary_img(frame)
@@ -28,12 +34,19 @@ class LineTrackerCV(LineTracker):
         if area > 0:
             annotated, a, b, residuals = self._fit_line(frame.copy(), binary)
             log_imgs['annotated'] = annotated
-            steer = -0.8 * a -5 * b
-            print(f' steer: {steer:6.2f}')
+            steer = -1 * a -10 * b
+            print(f' steer: {steer:6.5f}')
+            if self.delay:
+                self.q.put(steer)
+                steer = self.q.get()
             return steer, log_imgs
         else:
             print("Found no white lane!")
             return 0, log_imgs
+
+
+
+
     def _get_binary_img(self, origin, threshold=130):
         # 灰度
         # gray_ave = cv2.cvtColor(origin, cv2.COLOR_BGR2GRAY)

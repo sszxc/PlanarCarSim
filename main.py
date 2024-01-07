@@ -15,7 +15,7 @@ if __name__ == "__main__":
                         AprilTag_detection=False)
     monitor = Monitor({'topview': [0, 0, 800, 450],
                        'cam_1': [800, 0, 200, 150],
-                    #    'cam_2': [800, 200, 200, 200],
+                    #    'cam_2': [800, 150, 200, 150],
                        'mask': [800, 150, 200, 150],
                        'annotated': [800, 300, 200, 150],
                        }, size=[450, 1000])
@@ -23,7 +23,7 @@ if __name__ == "__main__":
     # car_controller = CarController()
     # car_controller.read_command(T_para)
 
-    linetracker = LineTrackerCV()
+    linetracker = LineTrackerCV(delay=False)
 
     while True:
         # 缩放显示

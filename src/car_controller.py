@@ -24,6 +24,7 @@ class CarController:
 
         if command == 1:
             self.speed = 0
+            self.direction = 0
             self.steer = 0
 
     def get_dT(self):

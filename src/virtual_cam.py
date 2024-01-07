@@ -74,6 +74,7 @@ class VirtualCamEnv:
         '''渲染相机图像'''
         # 手动更新俯视图相机的图像
         self.topview.img = copy.deepcopy(self.background)
+        result = {'topview': self.topview.img}
         
         for cam in self.cameras:
             # 利用前四个点生成变换矩阵
@@ -84,8 +85,9 @@ class VirtualCamEnv:
 
             # 更新俯视图外框
             cam.cam_frame_project(self.topview, (140, 144, 32))
+            result[cam.name] = cam.img
 
-        return [(cam.img, cam.name) for cam in self.cameras] + [(self.topview.img, 'topview')]
+        return result
 
     def control(self, T_para, command, real_kinematics=True):
         '''更新小车位姿'''

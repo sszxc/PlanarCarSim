@@ -18,7 +18,8 @@ class CarController:
         '''
         self.speed += np.sign(T_para[2]) * 50  # mm/s
         self.speed = np.clip(self.speed, -500, 500)
-        self.steer += np.sign(T_para[1]) * 3  # deg/s/s
+        self.steer += np.sign(T_para[1]) * 3  # deg/s/s 加速度
+        # self.steer = np.sign(T_para[1]) * 10  # deg/s/s
         self.steer = np.clip(self.steer, -15, 15)
 
     def get_dT(self):
